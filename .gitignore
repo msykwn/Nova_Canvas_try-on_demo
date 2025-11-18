@@ -1,4 +1,6 @@
 .idea
+model.*
+input.*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
