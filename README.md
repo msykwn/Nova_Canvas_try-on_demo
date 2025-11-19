@@ -8,15 +8,23 @@ Nova Canvas 着せ替え機能を触ってみるためのデモアプリ
 
 
 
-##  実行手順
+##  実行手順(ローカル)
 
-1. pipenv 
+1. pipenvをインストール
+1. 環境構築
+   ```
+   pipenv install
+   ```
 1. bedrockのAPIキーを発行
 1. 環境変数にAPIキーをセット
    ```
    export AWS_BEARER_TOKEN_BEDROCK=${APIキー}
    ```
-1. main.pyを実行
+1. 実行
+   検証用画像 `model.png`、`input.png` を配置して下記コマンドを実行すると着せ替え画像が作成される
+   ```
+   pipenv run start
+   ```
 
 ## 参考
 

@@ -1,6 +1,7 @@
 .idea
 model.*
 input.*
+image_*.png
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

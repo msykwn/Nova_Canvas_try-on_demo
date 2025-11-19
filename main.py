@@ -12,7 +12,7 @@ bedrock = boto3.client(service_name="bedrock-runtime", region_name="us-east-1")
 
 # Prepare the invocation payload.
 body_json = json.dumps(inference_params, indent=2)
-
+# print(body_json)
 # Invoke Nova Canvas.
 response = bedrock.invoke_model(
     body=body_json,
