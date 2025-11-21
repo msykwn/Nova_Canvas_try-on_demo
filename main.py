@@ -8,16 +8,25 @@ import boto3
 from PIL import Image
 
 from image_helper import inference_params
+from image_helper import build_inference_params
 
 # Create the Bedrock Runtime client.
 bedrock = boto3.client(service_name="bedrock-runtime", region_name="us-east-1")
 s3 = boto3.client("s3")
 
+def get_s3_image_base64(bucket, key):
+    """S3 の画像を Base64 文字列で取得"""
+    obj = s3.get_object(Bucket=bucket, Key=key)
+    img_bytes = obj["Body"].read()
+    return base64.b64encode(img_bytes).decode("utf-8")
 
-def invoke_api():
+def invoke_api(model, input):
     bucket_name = os.environ.get("BUCKET_NAME")
     # Prepare the invocation payload.
-    body_json = json.dumps(inference_params, indent=2)
+    body_json = json.dumps(
+        build_inference_params(get_s3_image_base64(bucket_name, model),
+                               get_s3_image_base64(bucket_name, input)
+                               ), indent=2)
     # print(body_json)
     # Invoke Nova Canvas.
     response = bedrock.invoke_model(
@@ -62,9 +71,7 @@ def invoke_api():
         # image = Image.open(image_buffer)
         # image.save(file_name)
 
-
-
-
-
 def lambda_handler(event, context):
-    return invoke_api()
+    model = event.get('model')
+    input = event.get('input')
+    return invoke_api(model, input)

@@ -3,6 +3,7 @@ def load_image_as_base64(image_path):
     """画像データを準備するためのヘルパー関数"""
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode("utf-8")
+
 inference_params = {
     "taskType": "VIRTUAL_TRY_ON",
     "virtualTryOnParams": {
@@ -17,3 +18,19 @@ inference_params = {
         "quality": "standard"
     }
 }
+
+def build_inference_params(model, input):
+    return {
+        "taskType": "VIRTUAL_TRY_ON",
+        "virtualTryOnParams": {
+            "sourceImage": model,
+            "referenceImage": input,
+            "maskType": "GARMENT",
+            "garmentBasedMask": {
+                "garmentClass": "FULL_BODY"
+            }
+        },
+        "imageGenerationConfig": {
+            "quality": "standard"
+        }
+    }
