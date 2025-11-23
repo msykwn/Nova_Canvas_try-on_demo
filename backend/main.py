@@ -1,13 +1,10 @@
 import base64
-import io
+import boto3
 import json
 import os
+
 from datetime import datetime
 
-import boto3
-from PIL import Image
-
-from image_helper import inference_params
 from image_helper import build_inference_params
 
 # Create the Bedrock Runtime client.
