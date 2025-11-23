@@ -1,7 +1,8 @@
 import {useState} from "react";
-import {UploadResult, uploadTryOnFile} from "../api/imageUploadService";
+import {uploadTryOnFile} from "../api/imageUploadService";
 
 import tryOnPicPic from "../resource/try-on.png"
+import {executeTryOn, TryOnResult} from "../api/tryOnService.ts";
 
 // const generateUniqueId = () => {
 //     const timestamp = new Date().getTime();
@@ -12,7 +13,7 @@ import tryOnPicPic from "../resource/try-on.png"
 const ImageUploadComponent = () => {
     const [modelImage, setModelImage] = useState<File | null>(null);
     const [inputImage, setInputImage] = useState<File | null>(null);
-    const [tryOnFile, setTryOnFile] = useState<UploadResult | null>(null);
+    const [tryOnFile, setTryOnFile] = useState<TryOnResult | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [modelPreview, setModelPreview] = useState<string | null>(null);
     const [inputPreview, setInputPreview] = useState<string | null>(null);
@@ -24,13 +25,12 @@ const ImageUploadComponent = () => {
                 return
             }
             setIsLoading(true);
-            const result = await uploadTryOnFile(modelImage, inputImage);
 
-            console.log("アップロード完了", result);
-            setTryOnFile(result)
-            // きせかえ実施
-            // 生成された画像表示
-            // setTryOnFile()
+            const prepareResult = await uploadTryOnFile(modelImage, inputImage);
+            console.log("アップロード完了");
+
+            const tryOnResult = await executeTryOn(prepareResult.modelFileName, prepareResult.inputFileName);
+            setTryOnFile(tryOnResult)
         } catch (err: any) {
             alert(err.message);
         } finally {
@@ -105,17 +105,6 @@ const ImageUploadComponent = () => {
                         <div
                             className="w-64 mb-3 mx-auto px-3 py-1 text-xs font-medium leading-none text-center text-blue-800 bg-blue-200 rounded-full animate-pulse dark:bg-blue-900 dark:text-blue-200">着替え中...</div>
                     )}
-                    {/* アップロード後に表示 */}
-                    {tryOnFile && (
-                        <div>
-                            <p>アップロード成功！</p>
-                            <img
-                                src={tryOnFile.inputUrl}
-                                alt="uploaded"
-                                style={{width: 200, border: "1px solid #ccc"}}
-                            />
-                        </div>
-                    )}
                     <div className="flex h-64 w-full">
                         <div className="flex-1 flex items-center justify-center">
                             {modelPreview && (
@@ -129,7 +118,7 @@ const ImageUploadComponent = () => {
                             <div className="flex-1 flex items-center justify-center">
                                 <img
                                     className="h-full object-contain"
-                                    src={tryOnPicPic}
+                                    src={tryOnFile ? tryOnFile.url : tryOnPicPic}
                                     alt="try-on Image"
                                 />
                             </div>

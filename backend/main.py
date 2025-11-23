@@ -20,10 +20,10 @@ def get_s3_image_base64(bucket, key):
 def invoke_api(model, input):
     bucket_name = os.environ.get("BUCKET_NAME")
     # Prepare the invocation payload.
-    body_json = json.dumps(
-        build_inference_params(get_s3_image_base64(bucket_name, model),
-                               get_s3_image_base64(bucket_name, input)
-                               ), indent=2)
+    body_json = json.dumps(build_inference_params(
+        get_s3_image_base64(bucket_name, model),
+        get_s3_image_base64(bucket_name, input)
+    ), indent=2)
     # print(body_json)
     # Invoke Nova Canvas.
     response = bedrock.invoke_model(
@@ -41,7 +41,7 @@ def invoke_api(model, input):
     # Decode each image from Base64 and save as a PNG file.
     for index, image_base64 in enumerate(images):
         image_bytes = base64.b64decode(image_base64)
-        file_name = f"output/image_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.png"
+        file_name = f"output/{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}_image.png"
 
         s3.put_object(
             Bucket=bucket_name,
@@ -58,10 +58,18 @@ def invoke_api(model, input):
 
         return {
             "statusCode": 200,
-            "message": "Image uploaded successfully",
-            "image_url": presigned_url,
-            "bucket": bucket_name,
-            "key": file_name
+            "headers": {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Headers": "*",
+                "Access-Control-Allow-Methods": "*"
+            },
+            "body": json.dumps({
+                "message": "Try-on successfully",
+                "image_url": presigned_url,
+                "bucket": bucket_name,
+                "key": file_name
+            })
         }
         # ローカル用
         # image_buffer = io.BytesIO(image_bytes)
@@ -69,6 +77,7 @@ def invoke_api(model, input):
         # image.save(file_name)
 
 def lambda_handler(event, context):
-    model = event.get('model')
-    input = event.get('input')
+    body = json.loads(event["body"])
+    model = body["model"]
+    input = body["input"]
     return invoke_api(model, input)

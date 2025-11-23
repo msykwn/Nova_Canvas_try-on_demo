@@ -1,5 +1,3 @@
-// src/api/imageUploadService.ts
-
 export interface UploadResult {
     modelFileName: string;
     modelUrl: string;
@@ -60,13 +58,16 @@ async function uploadFileToS3(file: File, path: String) {
  * アップロードした画像のファイル名とURLを返却する
  */
 export const uploadTryOnFile = async (modelImage: File, inputImage: File): Promise<UploadResult> => {
-    const modelUrl = await uploadFileToS3(modelImage, "model/" + `${timestamp}_${modelImage.name}`);
-    const inPutUrl = await uploadFileToS3(inputImage, "input/" +`${timestamp}_${inputImage.name}`);
+    const modelPath = "model/" + `${timestamp}_${modelImage.name}`
+    const inputPath = "input/" + `${timestamp}_${inputImage.name}`
+
+    const modelUrl = await uploadFileToS3(modelImage, modelPath);
+    const inPutUrl = await uploadFileToS3(inputImage, inputPath);
 
     return {
-        modelFileName: modelImage.name,
+        modelFileName: modelPath,
         modelUrl: modelUrl,
-        inputFileName: inputImage.name,
+        inputFileName: inputPath,
         inputUrl: inPutUrl
     };
 };
