@@ -5,6 +5,8 @@ export interface UploadResult {
     inputUrl: string;
 }
 
+const MAX_PIXELS = 2048 * 2048; // Nova Canvas 最大ピクセル数
+
 const now = new Date();
 const timestamp =
     now.getFullYear().toString() +
@@ -16,6 +18,38 @@ const timestamp =
     String(now.getSeconds()).padStart(2, "0") +
     "_" +
     String(now.getMilliseconds()).padStart(3, "0");
+
+const resizeImage = (file: File): Promise<Blob> => {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            const img = new Image();
+            img.onload = () => {
+                let width = img.width;
+                let height = img.height;
+                const totalPixels = width * height;
+
+                if (totalPixels > MAX_PIXELS) {
+                    const scale = Math.sqrt(MAX_PIXELS / totalPixels);
+                    width = Math.floor(width * scale);
+                    height = Math.floor(height * scale);
+                }
+
+                const canvas = document.createElement("canvas");
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext("2d");
+                ctx?.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob((blob) => {
+                    if (blob) resolve(blob);
+                }, "image/png");
+            };
+            img.src = ev.target?.result as string;
+        };
+        reader.readAsDataURL(file);
+    });
+};
 
 /**
  * アップロード用のURLを生成後、そのURLへファイルをアップロードし、URLを返却します。
@@ -39,12 +73,14 @@ async function uploadFileToS3(file: File, path: String) {
 
     const { put_url, get_url } = await preSignRes.json();
 
+    const resizedFile = await resizeImage(file);
+
     const uploadRes = await fetch(put_url, {
         method: "PUT",
         headers: {
             "Content-Type": file.type,
         },
-        body: file,
+        body: resizedFile,
     });
 
     if (!uploadRes.ok) {
