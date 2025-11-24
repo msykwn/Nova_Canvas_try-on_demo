@@ -1,8 +1,9 @@
-import {useState} from "react";
+import React, {useState} from "react";
 import {uploadTryOnFile} from "../api/imageUploadService";
 
 import tryOnPicPic from "../resource/try-on.png"
 import {executeTryOn, TryOnResult} from "../api/tryOnService.ts";
+import Image from "./Image.tsx";
 
 // const generateUniqueId = () => {
 //     const timestamp = new Date().getTime();
@@ -103,33 +104,17 @@ const ImageUploadComponent = () => {
                     </div>
                     {isLoading && (
                         <div
-                            className="w-64 mb-3 mx-auto px-3 py-1 text-xs font-medium leading-none text-center text-blue-800 bg-blue-200 rounded-full animate-pulse dark:bg-blue-900 dark:text-blue-200">着替え中...</div>
+                            className="w-64 mb-3 mx-auto px-3 py-1 text-xs font-medium leading-none text-center text-blue-800 bg-blue-200 rounded-full animate-pulse dark:bg-blue-900 dark:text-blue-200">着替え中🐢...</div>
                     )}
                     <div className="flex h-64 w-full">
                         <div className="flex-1 flex items-center justify-center">
-                            {modelPreview && (
-                                <img
-                                    className="h-full object-contain"
-                                    src={modelPreview}
-                                    alt="model preview"
-                                />
-                                )}
+                            {modelPreview && (<Image src={modelPreview} id="modelImage" />)}
                         </div>
                             <div className="flex-1 flex items-center justify-center">
-                                <img
-                                    className="h-full object-contain"
-                                    src={tryOnFile ? tryOnFile.url : tryOnPicPic}
-                                    alt="try-on Image"
-                                />
+                                <Image src={tryOnFile ? tryOnFile.url : tryOnPicPic} id="tryOnImage"/>
                             </div>
                             <div className="flex-1 flex items-center justify-center">
-                                {inputPreview && (
-                                    <img
-                                        className="h-full object-contain"
-                                        src={inputPreview}
-                                        alt="input preview"
-                                    />
-                                    )}
+                                {inputPreview && (<Image src={inputPreview} id="inputImage" />)}
                             </div>
                             </div>
                             <div className="flex items-center justify-center px-3 py-2 border-t dark:border-gray-600">
