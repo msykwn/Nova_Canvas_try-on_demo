@@ -1,9 +1,10 @@
-import React, {useState} from "react";
+import React, {useRef, useState} from "react";
 import {uploadTryOnFile} from "../api/imageUploadService";
 
 import tryOnPicPic from "../resource/try-on.png"
 import {executeTryOn, TryOnResult} from "../api/tryOnService.ts";
 import Image from "./Image.tsx";
+import {TryOnMode} from "../types/tryOnMode.ts";
 
 // const generateUniqueId = () => {
 //     const timestamp = new Date().getTime();
@@ -11,13 +12,17 @@ import Image from "./Image.tsx";
 //     return `${timestamp}-${randomNum}`;
 // };
 
+
 const ImageUploadComponent = () => {
     const [modelImage, setModelImage] = useState<File | null>(null);
     const [inputImage, setInputImage] = useState<File | null>(null);
+    const [mode, setMode] = useState<TryOnMode>(TryOnMode.Full);
     const [tryOnFile, setTryOnFile] = useState<TryOnResult | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [modelPreview, setModelPreview] = useState<string | null>(null);
     const [inputPreview, setInputPreview] = useState<string | null>(null);
+
+    const inputRef = useRef<HTMLInputElement>(null);
 
     const handleUpload = async () => {
         try {
@@ -30,7 +35,7 @@ const ImageUploadComponent = () => {
             const prepareResult = await uploadTryOnFile(modelImage, inputImage);
             console.log("アップロード完了");
 
-            const tryOnResult = await executeTryOn(prepareResult.modelFileName, prepareResult.inputFileName);
+            const tryOnResult = await executeTryOn(prepareResult.modelFileName, prepareResult.inputFileName, mode);
             setTryOnFile(tryOnResult)
         } catch (err: any) {
             alert(err.message);
@@ -58,17 +63,17 @@ const ImageUploadComponent = () => {
     };
 
     return (
-        <div className={"bg-lineBack mx-16 my-8"}>
-            <div className={"container bg-lineBack"}>
+        <div className={"border-gray-200 mx-8 my-8"}>
+            <div className={"container border-gray-200"}>
                 <div
                     className="w-full mb-2 border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600">
                     {/*model 画像*/}
                     <p className="text-lg text-heading">着せ替える人の画像</p>
                     <div className="flex items-center justify-center my-2 mx-8 ">
                         <label htmlFor="dropzone-file-model"
-                               className="flex flex-col items-center justify-center w-full h-32 bg-neutral-secondary-medium border border-dashed border-default-strong rounded-base cursor-pointer hover:bg-neutral-tertiary-medium">
+                               className="flex flex-col items-center justify-center w-full h-24 bg-neutral-secondary-medium border border-dashed border-default-strong rounded-base cursor-pointer hover:bg-neutral-tertiary-medium">
                             <div className="flex flex-col items-center justify-center text-body pt-5 pb-6">
-                                <svg className="w-8 h-8 mb-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                                <svg className="w-8 h-8 mb-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
                                      width="24" height="24" fill="none" viewBox="0 0 24 24">
                                     <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
                                           stroke-width="2"
@@ -76,9 +81,8 @@ const ImageUploadComponent = () => {
                                 </svg>
                                 <p className="mb-2 text-sm"><span
                                     className="font-semibold">Click to upload</span> or drag and drop</p>
-                                <p className="text-xs">PNG or JPG</p>
                             </div>
-                            <input id="dropzone-file-model" type="file" className="hidden"
+                            <input id="dropzone-file-model" type="file" className="hidden" ref={inputRef}
                                    onChange={handleSelectModel}/>
                         </label>
                     </div>
@@ -86,9 +90,9 @@ const ImageUploadComponent = () => {
                     <p className="text-lg text-heading">着せ替える服の画像</p>
                     <div className="flex items-center justify-center w-full">
                         <label htmlFor="dropzone-file-input"
-                               className="flex flex-col items-center justify-center w-full h-32 bg-neutral-secondary-medium border border-dashed border-default-strong rounded-base cursor-pointer hover:bg-neutral-tertiary-medium">
+                               className="flex flex-col items-center justify-center w-full h-24 bg-neutral-secondary-medium border border-dashed border-default-strong rounded-base cursor-pointer hover:bg-neutral-tertiary-medium">
                             <div className="flex flex-col items-center justify-center text-body pt-5 pb-6">
-                                <svg className="w-8 h-8 mb-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                                <svg className="w-8 h-8 mb-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
                                      width="24" height="24" fill="none" viewBox="0 0 24 24">
                                     <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
                                           stroke-width="2"
@@ -96,7 +100,6 @@ const ImageUploadComponent = () => {
                                 </svg>
                                 <p className="mb-2 text-sm"><span
                                     className="font-semibold">Click to upload</span> or drag and drop</p>
-                                <p className="text-xs">SVG, PNG, JPG or GIF (MAX. 800x400px)</p>
                             </div>
                             <input id="dropzone-file-input" type="file" className="hidden"
                                    onChange={handleSelectInput}/>
@@ -104,33 +107,58 @@ const ImageUploadComponent = () => {
                     </div>
                     {isLoading && (
                         <div
-                            className="w-64 mb-3 mx-auto px-3 py-1 text-xs font-medium leading-none text-center text-blue-800 bg-blue-200 rounded-full animate-pulse dark:bg-blue-900 dark:text-blue-200">着替え中🐢...</div>
+                            className="w-64 mb-1 mx-auto px-3 py-1 text-xs font-medium leading-none text-center text-blue-800 bg-blue-200 rounded-full animate-pulse dark:bg-blue-900 dark:text-blue-200">着替え中🐢...</div>
                     )}
                     <div className="flex h-64 w-full">
                         <div className="flex-1 flex items-center justify-center">
-                            {modelPreview && (<Image src={modelPreview} id="modelImage" />)}
+                            {modelPreview && (<Image src={modelPreview} id="modelImage"/>)}
                         </div>
-                            <div className="flex-1 flex items-center justify-center">
-                                <Image src={tryOnFile ? tryOnFile.url : tryOnPicPic} id="tryOnImage"/>
-                            </div>
-                            <div className="flex-1 flex items-center justify-center">
-                                {inputPreview && (<Image src={inputPreview} id="inputImage" />)}
-                            </div>
-                            </div>
-                            <div className="flex items-center justify-center px-3 py-2 border-t dark:border-gray-600">
-                                <button
-                                    type="submit"
-                                    disabled={isLoading || modelImage == null || inputImage == null}
-                                    className={"inline-flex items-center bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full"}
-                                    onClick={handleUpload}>
-                                    着せ替え！
-                                </button>
-                            </div>
+                        <div className="flex-1 flex items-center justify-center">
+                            <Image src={tryOnFile ? tryOnFile.url : tryOnPicPic} id="tryOnImage"/>
+                        </div>
+                        <div className="flex-1 flex items-center justify-center">
+                            {inputPreview && (<Image src={inputPreview} id="inputImage"/>)}
                         </div>
                     </div>
+                    <div className="flex w-full justify-center my-1">
+                        <div className="flex items-center me-4">
+                            <input id="full-radio" type="radio" value="" name="mode-radio-group"
+                                   checked={mode === "full"}
+                                   onChange={() => setMode(TryOnMode.Full)}
+                                   className="w-4 h-4 text-neutral-primary border-default-medium bg-neutral-secondary-medium rounded-full checked:border-brand focus:ring-2 focus:outline-none focus:ring-brand-subtle border border-default appearance-none　checked:bg-brand"/>
+                            <label htmlFor="full-radio" className="select-none ms-2 text-sm font-medium text-heading">全身</label>
+                        </div>
+                        <div className="flex items-center me-4">
+                            <input id="top-radio" type="radio" value="" name="mode-radio-group"
+                                   checked={mode === "top"}
+                                   onChange={() => setMode(TryOnMode.Top)}
+                                   className="w-4 h-4 text-neutral-primary border-default-medium bg-neutral-secondary-medium rounded-full checked:border-brand focus:ring-2 focus:outline-none focus:ring-brand-subtle border border-default appearance-none　checked:bg-brand"/>
+                            <label htmlFor="top-radio"
+                                   className="select-none ms-2 text-sm font-medium text-heading">トップス</label>
+                        </div>
+                        <div className="flex items-center me-4">
+                            <input id="bottom-radio" type="radio" value="bottom" name="mode-radio-group"
+                                   checked={mode === "bottom"}
+                                   onChange={() => setMode(TryOnMode.Bottom)}
+                                   className="w-4 h-4 text-neutral-primary border-default-medium bg-neutral-secondary-medium rounded-full checked:border-brand focus:ring-2 focus:outline-none focus:ring-brand-subtle border border-default appearance-none　checked:bg-brand"/>
+                            <label htmlFor="bottom-radio"
+                                   className="select-none ms-2 text-sm font-medium text-heading">ボトムス</label>
+                        </div>
+                    </div>
+                    <div className="flex items-center justify-center px-3 py-2 border-t dark:border-gray-600">
+                        <button
+                            type="submit"
+                            disabled={isLoading || modelImage == null || inputImage == null}
+                            className={"inline-flex items-center bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full"}
+                            onClick={handleUpload}>
+                            着せ替え！
+                        </button>
+                    </div>
                 </div>
-                );
-                };
+            </div>
+        </div>
+    );
+};
 
 export {
     ImageUploadComponent

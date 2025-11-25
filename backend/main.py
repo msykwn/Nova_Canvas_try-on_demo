@@ -17,12 +17,13 @@ def get_s3_image_base64(bucket, key):
     img_bytes = obj["Body"].read()
     return base64.b64encode(img_bytes).decode("utf-8")
 
-def invoke_api(model, input):
+def invoke_api(model, input, mode):
     bucket_name = os.environ.get("BUCKET_NAME")
     # Prepare the invocation payload.
     body_json = json.dumps(build_inference_params(
         get_s3_image_base64(bucket_name, model),
-        get_s3_image_base64(bucket_name, input)
+        get_s3_image_base64(bucket_name, input),
+        mode
     ), indent=2)
     # print(body_json)
     # Invoke Nova Canvas.
@@ -80,4 +81,5 @@ def lambda_handler(event, context):
     body = json.loads(event["body"])
     model = body["model"]
     input = body["input"]
-    return invoke_api(model, input)
+    mode = body["mode"]
+    return invoke_api(model, input, mode)
