@@ -20,7 +20,20 @@ export const executeTryOn = async (modelImageUrl: String, inputImageUrl: String,
     });
 
     if (!res.ok) {
-        throw new Error(`試着に失敗しました`);
+        // バックエンドからのエラーメッセージを取得
+        let errorMessage = "試着に失敗しました";
+
+        try {
+            const errorData = await res.json();
+            errorMessage = errorData.error || "試着に失敗しました";
+            if (errorData.details) {
+                errorMessage += `\n詳細: ${errorData.details}`;
+            }
+        } catch (parseError) {
+            // JSONのパースに失敗した場合はデフォルトメッセージを使用
+        }
+
+        throw new Error(errorMessage);
     }
 
     const { image_url, key } = await res.json();
